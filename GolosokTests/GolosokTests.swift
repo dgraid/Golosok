@@ -305,6 +305,18 @@ struct GolosokTests {
         #expect(AudioCapture.vttTime(3661.5) == "01:01:01.500")
     }
 
+    @Test func timedExportLinesUsePhraseStart() {
+        let words = [
+            TimedWord(text: "Первая.", start: 1.0, end: 1.4),
+            TimedWord(text: "Вторая.", start: 7.0, end: 7.5)
+        ]
+        #expect(TimedTranscript.lines(from: words) == "00:00:01  Первая.\n00:00:07  Вторая.")
+    }
+
+    @Test func timedExportWithoutWordsDoesNotInventTime() {
+        #expect(TimedTranscript.lines(from: []) == nil)
+    }
+
     // MARK: - Version comparison (update check)
 
     @Test func versionComparisonHandlesSuffixes() {

@@ -1104,8 +1104,13 @@ class AudioCapture: NSObject, ObservableObject, AVAudioRecorderDelegate {
             var content = ""
             let prettyText = TextFormatter.formatIntoParagraphs(item.text)
             switch format.lowercased() {
-            case "md": content = "# Транскрипция Голосок\n**Дата:** \(item.date)\n**Длительность:** \(item.duration)\n\n---\n\n\(prettyText)"
-            case "txt": content = "Голосок — Транскрипция\nДата: \(item.date)\nДлительность: \(item.duration)\n\n\(prettyText)"
+            case "md", "txt":
+                let body = timedExportBody(for: item) ?? prettyText
+                if format.lowercased() == "md" {
+                    content = "# Транскрипция Голосок\n**Дата:** \(item.date)\n**Длительность:** \(item.duration)\n\n---\n\n\(body)"
+                } else {
+                    content = "Голосок — Транскрипция\nДата: \(item.date)\nДлительность: \(item.duration)\n\n\(body)"
+                }
             case "csv":
                 // \u{FEFF} — это BOM маркер для того, чтобы Excel открывал русский язык в идеальном UTF-8!
                 content = "\u{FEFF}\"Дата\",\"Длительность\",\"Текст\"\n\"\(item.date)\",\"\(item.duration)\",\"\(item.text.replacingOccurrences(of: "\"", with: "\"\""))\""
@@ -1124,6 +1129,11 @@ class AudioCapture: NSObject, ObservableObject, AVAudioRecorderDelegate {
             }
             try? content.write(to: saveURL, atomically: true, encoding: .utf8)
         }
+    }
+
+    private func timedExportBody(for item: TranscriptionItem) -> String? {
+        guard let timings = readTimings(for: item.id), !timings.words.isEmpty else { return nil }
+        return TimedTranscript.lines(from: timings.words)
     }
     
 func checkUpdates(force: Bool = false) {
